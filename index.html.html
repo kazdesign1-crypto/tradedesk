@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0a0e14">
+<title id="pageTitle">株式投資 デイリールーティン</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&family=Bebas+Neue&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme:dark;
+  --bg:#0a0e14;--surface:#111720;--surface2:#161d28;--border:#1e2d3d;
+  --accent:#00d4ff;--accent2:#00ff88;--accent3:#ff6b35;
+  --gold:#ffd700;--red:#ff4757;--green:#2ed573;
+  --text:#e8edf5;--text-muted:#7a9ab8;--text-dim:#3a5a7a;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{background:#0a0e14;}
+body{
+  background:var(--bg)!important;color:var(--text)!important;
+  font-family:'Noto Sans JP',sans-serif;font-size:15px;
+  min-height:100vh;overflow-x:hidden;-webkit-text-size-adjust:100%;
+}
+body::before{content:'';position:fixed;inset:0;
+  background-image:linear-gradient(rgba(0,212,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,0.03) 1px,transparent 1px);
+  background-size:40px 40px;pointer-events:none;z-index:0;}
+.container{max-width:1240px;margin:0 auto;padding:14px 18px;position:relative;z-index:1;}
+
+/* ── HEADER ────────────────────────────────────────── */
+.header{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:16px;
+  padding:16px 26px;background:var(--surface);border:1px solid var(--border);
+  border-radius:8px 8px 0 0;position:relative;overflow:hidden;}
+.header::after{content:'';position:absolute;bottom:0;left:0;width:100%;height:2px;
+  background:linear-gradient(90deg,transparent,var(--accent),var(--accent2),var(--accent),transparent);
+  background-size:200% 100%;animation:shimmer 3s linear infinite;}
+@keyframes shimmer{0%{background-position:-100% 0}100%{background-position:100% 0}}
+.logo{font-family:'Bebas Neue',sans-serif;font-size:30px;color:var(--accent);letter-spacing:4px;line-height:1;text-shadow:0 0 22px rgba(0,212,255,0.55);}
+.logo span{color:var(--accent2);}
+.datetime-block{text-align:center;}
+.datetime-date{font-size:19px;font-weight:700;color:var(--text);letter-spacing:1px;line-height:1.35;}
+.datetime-time{font-family:'JetBrains Mono',monospace;font-size:52px;font-weight:600;color:var(--accent2);line-height:1;text-shadow:0 0 28px rgba(0,255,136,0.45);letter-spacing:4px;}
+.world-clocks{display:flex;flex-direction:column;gap:5px;}
+.wclock{display:flex;align-items:center;gap:10px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:7px 13px;min-width:305px;}
+.wclock-info{flex:1;}
+.wclock-flag-label{font-size:12px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;}
+.wclock-tz{font-size:10px;color:var(--text-dim);font-family:'JetBrains Mono',monospace;}
+.wclock-holiday{display:none;font-size:10px;color:var(--red);font-family:'JetBrains Mono',monospace;margin-top:2px;}
+.wclock-holiday.show{display:block;}
+.wclock-right{text-align:right;}
+.wclock-date{font-size:10px;color:var(--text-dim);font-family:'JetBrains Mono',monospace;margin-bottom:1px;}
+.wclock-time{font-family:'JetBrains Mono',monospace;font-size:17px;font-weight:600;color:var(--text);}
+.wclock-time.open{color:var(--green);text-shadow:0 0 8px rgba(46,213,115,0.4);}
+.wclock-time.pre{color:var(--gold);}
+
+/* ── SUB BAR ───────────────────────────────────────── */
+.sub-bar{display:flex;align-items:center;justify-content:space-between;padding:7px 16px;
+  background:var(--surface2);border:1px solid var(--border);border-top:none;
+  border-radius:0 0 5px 5px;margin-bottom:14px;
+  font-size:12px;font-family:'JetBrains Mono',monospace;color:var(--text-muted);flex-wrap:wrap;gap:7px;}
+.next-alert-val{color:var(--gold);font-weight:600;}
+.market-pills{display:flex;gap:6px;flex-wrap:wrap;}
+.mpill{display:flex;align-items:center;gap:5px;padding:3px 10px;border-radius:10px;font-size:11px;border:1px solid;}
+.mpill.open{background:rgba(46,213,115,0.1);border-color:rgba(46,213,115,0.3);color:var(--green);}
+.mpill.closed{background:rgba(90,122,154,0.07);border-color:rgba(90,122,154,0.15);color:var(--text-dim);}
+.mpill.pre{background:rgba(255,215,0,0.1);border-color:rgba(255,215,0,0.3);color:var(--gold);}
+.mpill.holiday{background:rgba(255,71,87,0.08);border-color:rgba(255,71,87,0.25);color:var(--red);}
+.dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;}
+.dot-open{background:var(--green);box-shadow:0 0 5px var(--green);animation:blink 1s ease-in-out infinite;}
+.dot-pre{background:var(--gold);}
+.dot-closed{background:var(--text-dim);}
+.dot-holiday{background:var(--red);}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+
+/* ── ALERT BANNER ──────────────────────────────────── */
+.alert-banner{display:none;align-items:flex-start;gap:14px;padding:17px 22px;
+  background:linear-gradient(135deg,rgba(255,107,53,0.18),rgba(255,107,53,0.06));
+  border:1px solid var(--accent3);border-left:5px solid var(--accent3);
+  border-radius:5px;margin-bottom:14px;animation:alertPulse 1.5s ease-in-out infinite;}
+.alert-banner.show{display:flex;}
+@keyframes alertPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,107,53,0.3)}50%{box-shadow:0 0 24px 6px rgba(255,107,53,0.14)}}
+.alert-icon{font-size:24px;animation:shake 0.5s ease-in-out infinite;flex-shrink:0;margin-top:2px;}
+@keyframes shake{0%,100%{transform:rotate(0)}25%{transform:rotate(-12deg)}75%{transform:rotate(12deg)}}
+.alert-content{flex:1;}
+.alert-title{font-size:11px;text-transform:uppercase;letter-spacing:2px;color:var(--accent3);font-family:'JetBrains Mono',monospace;margin-bottom:4px;opacity:0.8;}
+.alert-text{font-size:16px;font-weight:700;color:var(--accent3);line-height:1.4;}
+.alert-sub{font-size:12px;color:rgba(255,107,53,0.75);margin-top:4px;font-family:'JetBrains Mono',monospace;}
+.alert-close{cursor:pointer;color:var(--text-dim);font-size:18px;flex-shrink:0;padding:0 4px;transition:color 0.2s;align-self:flex-start;background:none;border:none;}
+.alert-close:hover{color:var(--text);}
+
+/* ── SECTION HEADER ────────────────────────────────── */
+.section-header{display:flex;align-items:center;gap:10px;margin-bottom:9px;}
+.section-title{font-size:11px;text-transform:uppercase;letter-spacing:3px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;white-space:nowrap;}
+.section-line{flex:1;height:1px;background:var(--border);}
+.section-action{font-size:11px;color:var(--text-dim);font-family:'JetBrains Mono',monospace;white-space:nowrap;cursor:pointer;transition:color 0.2s;user-select:none;padding:2px 0;}
+.section-action:hover{color:var(--accent);}
+
+/* ── LINKS ─────────────────────────────────────────── */
+.links-group{margin-bottom:10px;}
+.links-group-label{font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--text-dim);font-family:'JetBrains Mono',monospace;margin-bottom:7px;padding-left:2px;}
+.links-section{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;}
+a.link-btn{
+  display:flex;align-items:center;gap:8px;
+  padding:10px 12px;
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:5px;color:var(--text);text-decoration:none;
+  font-size:13px;font-weight:500;transition:all 0.2s;overflow:hidden;
+}
+a.link-btn:hover{border-color:var(--accent);color:var(--accent);background:rgba(0,212,255,0.05);transform:translateY(-1px);}
+a.link-btn.heatmap:hover{border-color:var(--accent3);color:var(--accent3);background:rgba(255,107,53,0.05);}
+a.link-btn.news-link:hover{border-color:#b57ff5;color:#b57ff5;background:rgba(138,43,226,0.06);}
+/* iSPEED non-link button */
+span.ispeed-btn{cursor:default;position:relative;color:var(--text-muted)!important;border-color:var(--border)!important;}
+span.ispeed-btn:hover{border-color:var(--gold)!important;color:var(--gold)!important;background:rgba(255,215,0,0.06)!important;transform:none!important;}
+span.ispeed-btn::after{
+  content:attr(title);
+  display:none;position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);
+  background:#1a2535;border:1px solid var(--gold);border-radius:5px;
+  color:var(--text);font-size:11px;font-family:'Noto Sans JP',sans-serif;font-weight:400;
+  white-space:nowrap;padding:6px 10px;pointer-events:none;z-index:100;
+  box-shadow:0 4px 16px rgba(0,0,0,0.5);
+}
+span.ispeed-btn:hover::after{display:block;}
+.link-icon{font-size:14px;flex-shrink:0;}
+.link-text{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+/* ── ACCORDION ─────────────────────────────────────── */
+.accordion{background:var(--surface);border:1px solid var(--border);border-radius:5px;margin-bottom:14px;overflow:hidden;}
+.accordion-header{display:flex;align-items:center;gap:10px;padding:11px 16px;cursor:pointer;user-select:none;background:var(--surface2);transition:background 0.2s;}
+.accordion-header:hover{background:rgba(0,212,255,0.04);}
+.accordion-title{font-size:11px;text-transform:uppercase;letter-spacing:3px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;flex:1;}
+.accordion-action{font-size:11px;color:var(--text-dim);font-family:'JetBrains Mono',monospace;white-space:nowrap;cursor:pointer;margin-right:8px;transition:color 0.2s;}
+.accordion-action:hover{color:var(--accent);}
+.accordion-chevron{font-size:12px;color:var(--text-dim);transition:transform 0.25s;flex-shrink:0;}
+.accordion.open .accordion-chevron{transform:rotate(180deg);}
+.accordion-body{max-height:0;overflow:hidden;transition:max-height 0.3s ease;}
+.accordion.open .accordion-body{max-height:700px;}
+.accordion-body-inner{padding:14px;}
+/* horizontal scroll for schedule table on narrow screens */
+.schedule-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+
+/* ── SCHEDULE TABLE ────────────────────────────────── */
+.schedule-table{width:100%;border-collapse:separate;border-spacing:0;}
+.schedule-table th{font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-dim);padding:6px 11px;background:var(--surface2);border-bottom:1px solid var(--border);text-align:left;white-space:nowrap;}
+.schedule-table td{font-family:'JetBrains Mono',monospace;font-size:12px;padding:6px 11px;border-bottom:1px solid rgba(30,45,61,0.5);white-space:nowrap;vertical-align:middle;color:var(--text);}
+.schedule-table tr:last-child td{border-bottom:none;}
+.schedule-table tr:hover td{background:rgba(0,212,255,0.03);}
+.schedule-table tr.upcoming td{background:rgba(255,215,0,0.04);}
+.schedule-table tr.upcoming td:first-child{border-left:3px solid var(--gold);}
+.schedule-table tr.holiday-row td{opacity:0.35;}
+.sch-time{color:var(--accent)!important;font-weight:600;font-size:14px;}
+.sch-market{color:var(--text-muted)!important;font-size:11px;}
+
+/* ── CHECKLIST ─────────────────────────────────────── */
+.checklist-header{display:flex;align-items:center;justify-content:space-between;margin-top:8px;margin-bottom:9px;}
+.clear-all-btn{display:flex;align-items:center;gap:7px;cursor:pointer;user-select:none;padding:5px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;transition:all 0.2s;}
+.clear-all-btn:hover{border-color:var(--red);}
+.clear-checkbox{width:15px;height:15px;border:2px solid var(--border);border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--red);flex-shrink:0;transition:all 0.2s;}
+.clear-all-btn:hover .clear-checkbox{border-color:var(--red);background:rgba(255,71,87,0.1);}
+.clear-label{font-size:12px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;}
+.clear-all-btn:hover .clear-label{color:var(--red);}
+.checklist{display:flex;flex-direction:column;gap:7px;margin-bottom:14px;}
+.check-item{display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;cursor:pointer;transition:all 0.2s;font-size:14px;color:var(--text);}
+.check-item:hover{border-color:rgba(0,212,255,0.2);}
+.check-item.done{background:rgba(46,213,115,0.04);border-color:rgba(46,213,115,0.15);}
+.check-item.done .check-label{color:var(--text-muted);text-decoration:line-through;}
+.checkbox{width:18px;height:18px;border:2px solid var(--border);border-radius:3px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.2s;font-size:11px;color:var(--text);}
+.check-item.done .checkbox{background:var(--green);border-color:var(--green);}
+
+/* ── TOAST ─────────────────────────────────────────── */
+.toast{position:fixed;top:20px;right:20px;background:var(--surface);border:1px solid var(--accent3);border-left:4px solid var(--accent3);border-radius:5px;padding:14px 18px;min-width:270px;max-width:90vw;z-index:1000;transform:translateX(420px);transition:transform 0.3s ease;box-shadow:0 8px 32px rgba(0,0,0,0.5);}
+.toast.show{transform:translateX(0);}
+.toast-title{font-size:13px;font-weight:700;color:var(--accent3);margin-bottom:3px;}
+.toast-body{font-size:12px;color:var(--text-muted);}
+
+/* ── MODAL ─────────────────────────────────────────── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:2000;align-items:center;justify-content:center;padding:16px;}
+.modal-overlay.show{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:24px;width:min(640px,100%);max-height:88vh;overflow-y:auto;position:relative;color:var(--text);}
+.modal-title{font-size:14px;font-weight:700;color:var(--accent);letter-spacing:2px;text-transform:uppercase;font-family:'JetBrains Mono',monospace;margin-bottom:5px;}
+.modal-sub{font-size:12px;color:var(--text-muted);margin-bottom:4px;}
+.modal-sub2{font-size:11px;color:var(--text-dim);margin-bottom:18px;font-family:'JetBrains Mono',monospace;line-height:1.65;}
+.modal-close{position:absolute;top:16px;right:16px;cursor:pointer;color:var(--text-dim);font-size:20px;transition:color 0.2s;background:none;border:none;}
+.modal-close:hover{color:var(--text);}
+.alert-setting-row{display:flex;align-items:center;gap:12px;padding:11px 13px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;margin-bottom:6px;transition:opacity 0.2s;}
+.alert-setting-row.disabled{opacity:0.4;}
+.alert-toggle{position:relative;width:38px;height:20px;flex-shrink:0;}
+.alert-toggle input{opacity:0;width:0;height:0;position:absolute;}
+.toggle-slider{position:absolute;inset:0;background:var(--border);border-radius:20px;cursor:pointer;transition:0.3s;}
+.toggle-slider::before{content:'';position:absolute;width:14px;height:14px;left:3px;bottom:3px;background:var(--text-dim);border-radius:50%;transition:0.3s;}
+.alert-toggle input:checked+.toggle-slider{background:rgba(0,212,255,0.3);}
+.alert-toggle input:checked+.toggle-slider::before{transform:translateX(18px);background:var(--accent);}
+.alert-setting-info{flex:1;}
+.alert-setting-label{font-size:13px;font-weight:500;color:var(--text);}
+.alert-setting-default{font-size:11px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;margin-top:2px;}
+.alert-time-input{background:var(--surface);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:13px;padding:5px 9px;width:74px;text-align:center;-webkit-appearance:none;}
+.alert-time-input:focus{outline:none;border-color:var(--accent);}
+.modal-save-btn{width:100%;margin-top:16px;padding:11px;background:rgba(0,212,255,0.1);border:1px solid var(--accent);border-radius:5px;color:var(--accent);font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;letter-spacing:1px;}
+.modal-save-btn:hover{background:rgba(0,212,255,0.2);}
+.modal-reset-btn{width:100%;margin-top:7px;padding:9px;background:transparent;border:1px solid var(--border);border-radius:5px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;font-size:12px;cursor:pointer;transition:all 0.2s;}
+.modal-reset-btn:hover{border-color:var(--text-muted);color:var(--text);}
+.modal-section-label{font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--text-dim);font-family:'JetBrains Mono',monospace;margin:14px 0 7px;border-top:1px solid var(--border);padding-top:11px;}
+.holiday-note{padding:9px 13px;background:rgba(255,71,87,0.07);border:1px solid rgba(255,71,87,0.2);border-radius:5px;font-size:11px;color:var(--red);font-family:'JetBrains Mono',monospace;margin-bottom:13px;line-height:1.65;}
+
+/* ── RESPONSIVE ────────────────────────────────────── */
+@media(max-width:960px){.links-section{grid-template-columns:repeat(4,1fr);}}
+@media(max-width:760px){
+  .header{grid-template-columns:1fr;text-align:center;}
+  .world-clocks{align-items:stretch;}
+  .wclock{min-width:unset;}
+  .datetime-time{font-size:40px;}
+  .links-section{grid-template-columns:repeat(3,1fr);}
+  .toast{right:10px;left:10px;min-width:unset;transform:translateY(-80px);}
+  .toast.show{transform:translateY(0);}
+}
+@media(max-width:520px){.links-section{grid-template-columns:repeat(2,1fr);}}
+</style>
+</head>
+<body>
+<div class="container">
+
+<!-- HEADER -->
+<div class="header">
+  <div><div class="logo">TRADE<span>DESK</span></div></div>
+  <div class="datetime-block">
+    <div class="datetime-date" id="headerDate"></div>
+    <div class="datetime-time" id="liveClock">--:--:--</div>
+  </div>
+  <div class="world-clocks">
+    <div class="wclock">
+      <div class="wclock-info">
+        <div class="wclock-flag-label">🇯🇵 東京（JST）</div>
+        <div class="wclock-tz">UTC+9</div>
+        <div class="wclock-holiday" id="holiday-jp"></div>
+      </div>
+      <div class="wclock-right"><div class="wclock-date" id="wc-jp-date"></div><div class="wclock-time" id="wc-jp"></div></div>
+    </div>
+    <div class="wclock">
+      <div class="wclock-info">
+        <div class="wclock-flag-label">🇬🇧 ロンドン（BST/GMT）</div>
+        <div class="wclock-tz">UTC+0/+1</div>
+        <div class="wclock-holiday" id="holiday-lon"></div>
+      </div>
+      <div class="wclock-right"><div class="wclock-date" id="wc-lon-date"></div><div class="wclock-time" id="wc-lon"></div></div>
+    </div>
+    <div class="wclock">
+      <div class="wclock-info">
+        <div class="wclock-flag-label">🇺🇸 ニューヨーク（ET）</div>
+        <div class="wclock-tz">UTC-5/-4</div>
+        <div class="wclock-holiday" id="holiday-ny"></div>
+      </div>
+      <div class="wclock-right"><div class="wclock-date" id="wc-ny-date"></div><div class="wclock-time" id="wc-ny"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- SUB BAR -->
+<div class="sub-bar">
+  <div><span style="color:var(--text-dim);">⏱ 次のアラート：</span><span class="next-alert-val" id="nextAlertInfo">計算中…</span></div>
+  <div class="market-pills" id="marketPills"></div>
+</div>
+
+<!-- ALERT BANNER -->
+<div class="alert-banner" id="alertBanner">
+  <div class="alert-icon">🔔</div>
+  <div class="alert-content">
+    <div class="alert-title">マーケットアラート</div>
+    <div class="alert-text" id="alertText"></div>
+    <div class="alert-sub" id="alertSub"></div>
+  </div>
+  <button class="alert-close" onclick="closeAlert()">✕</button>
+</div>
+
+<!-- ① クイックリンク -->
+<div class="section-header"><div class="section-title">クイックリンク</div><div class="section-line"></div></div>
+<div class="links-group">
+  <div class="links-group-label">── 証券・チャート・情報</div>
+  <div class="links-section">
+    <a href="https://www.sbisec.co.jp/ETGate" target="_blank" rel="noopener" class="link-btn"><span class="link-icon">🏦</span><span class="link-text">SBI証券</span></a>
+    <a href="https://www.rakuten-sec.co.jp/" target="_blank" rel="noopener" class="link-btn"><span class="link-icon">🔴</span><span class="link-text">楽天証券</span></a>
+    <a href="https://jp.tradingview.com/" target="_blank" rel="noopener" class="link-btn"><span class="link-icon">📊</span><span class="link-text">TradingView</span></a>
+    <a href="https://kabutan.jp/" target="_blank" rel="noopener" class="link-btn"><span class="link-icon">🐎</span><span class="link-text">かぶたん</span></a>
+    <a href="https://www.ipokiso.com/index.html" target="_blank" rel="noopener" class="link-btn"><span class="link-icon">🚀</span><span class="link-text">IPO情報</span></a>
+    <a href="https://jp.investing.com/economic-calendar" target="_blank" rel="noopener" class="link-btn"><span class="link-icon">📅</span><span class="link-text">経済指標カレンダー</span></a>
+    <a href="https://sekai-kabuka.com/pc-index.html" target="_blank" rel="noopener" class="link-btn"><span class="link-icon">🌐</span><span class="link-text">世界の株価・マーケット</span></a>
+    <a href="https://225225.jp/" target="_blank" rel="noopener" class="link-btn"><span class="link-icon">📈</span><span class="link-text">世界株価と日経225</span></a>
+    <a href="https://nikkei225jp.com/data/vix.php" target="_blank" rel="noopener" class="link-btn"><span class="link-icon">😱</span><span class="link-text">恐怖指数（VIX）</span></a>
+    <a href="https://nikkei225jp.com/cme/" target="_blank" rel="noopener" class="link-btn"><span class="link-icon">🔮</span><span class="link-text">日経先物</span></a>
+    <a href="https://jp.tradingview.com/chart/gTKrijxT/?symbol=TVC%3ASOX" target="_blank" rel="noopener" class="link-btn"><span class="link-icon">💡</span><span class="link-text">SOX指数</span></a>
+    <a href="https://nikkei225jp.com/data/touraku.php" target="_blank" rel="noopener" class="link-btn"><span class="link-icon">📉</span><span class="link-text">騰落レシオ</span></a>
+    <a href="https://jp.tradingview.com/screener/" target="_blank" rel="noopener" class="link-btn"><span class="link-icon">🔍</span><span class="link-text">株式スクリーナー</span></a>
+    <a href="https://shikiho.toyokeizai.net/" target="_blank" rel="noopener" class="link-btn"><span class="link-icon">📖</span><span class="link-text">四季報オンライン</span></a>
+    <a href="https://www.rakuten-sec.co.jp/web/us/holiday_us.html" target="_blank" rel="noopener" class="link-btn"><span class="link-icon">🗓</span><span class="link-text">日米市場 休場日</span></a>
+  </div>
+</div>
+
+<!-- ② ヒートマップ -->
+<div class="links-group" style="margin-bottom:16px;">
+  <div class="links-group-label">── ヒートマップ</div>
+  <div class="links-section">
+    <a href="https://jp.tradingview.com/heatmap/stock/#%7B%22dataSource%22%3A%22SPX500%22%2C%22blockColor%22%3A%22change%22%2C%22blockSize%22%3A%22market_cap_basic%22%2C%22grouping%22%3A%22sector%22%7D" target="_blank" rel="noopener" class="link-btn heatmap"><span class="link-icon">🟠</span><span class="link-text">S&amp;P500</span></a>
+    <a href="https://jp.tradingview.com/heatmap/stock/#%7B%22dataSource%22%3A%22DJDJI%22%2C%22blockColor%22%3A%22change%22%2C%22blockSize%22%3A%22market_cap_basic%22%2C%22grouping%22%3A%22sector%22%7D" target="_blank" rel="noopener" class="link-btn heatmap"><span class="link-icon">🟠</span><span class="link-text">ダウ平均</span></a>
+    <a href="https://jp.tradingview.com/heatmap/stock/#%7B%22dataSource%22%3A%22NASDAQ100%22%2C%22blockColor%22%3A%22change%22%2C%22blockSize%22%3A%22market_cap_basic%22%2C%22grouping%22%3A%22sector%22%7D" target="_blank" rel="noopener" class="link-btn heatmap"><span class="link-icon">🟠</span><span class="link-text">ナスダック100</span></a>
+    <a href="https://jp.tradingview.com/heatmap/stock/#%7B%22dataSource%22%3A%22NASDAQCOMPOSITE%22%2C%22blockColor%22%3A%22change%22%2C%22blockSize%22%3A%22market_cap_basic%22%2C%22grouping%22%3A%22sector%22%7D" target="_blank" rel="noopener" class="link-btn heatmap"><span class="link-icon">🟠</span><span class="link-text">ナスダック総合</span></a>
+    <a href="https://jp.tradingview.com/heatmap/stock/#%7B%22dataSource%22%3A%22NI225%22%2C%22blockColor%22%3A%22change%22%2C%22blockSize%22%3A%22market_cap_basic%22%2C%22grouping%22%3A%22sector%22%7D" target="_blank" rel="noopener" class="link-btn heatmap"><span class="link-icon">🟠</span><span class="link-text">JAPAN225</span></a>
+    <a href="https://jp.tradingview.com/heatmap/stock/#%7B%22dataSource%22%3A%22AllJP%22%2C%22blockColor%22%3A%22change%22%2C%22blockSize%22%3A%22market_cap_basic%22%2C%22grouping%22%3A%22sector%22%7D" target="_blank" rel="noopener" class="link-btn heatmap"><span class="link-icon">🟠</span><span class="link-text">全日本企業</span></a>
+  </div>
+</div>
+
+<!-- ③ ニュース -->
+<div class="section-header">
+  <div class="section-title">ニュース・情報源</div>
+  <div class="section-line"></div>
+</div>
+<div class="links-group" style="margin-bottom:16px;">
+  <div class="links-group-label">── 国内・海外 ニュースサイト</div>
+  <div class="links-section">
+    <a href="https://www.bloomberg.com/jp" target="_blank" rel="noopener" class="link-btn news-link"><span class="link-icon">📰</span><span class="link-text">Bloomberg JP</span></a>
+    <a href="https://jp.reuters.com/" target="_blank" rel="noopener" class="link-btn news-link"><span class="link-icon">📡</span><span class="link-text">Reuters JP</span></a>
+    <a href="https://www.nikkei.com/" target="_blank" rel="noopener" class="link-btn news-link"><span class="link-icon">🗞</span><span class="link-text">日本経済新聞</span></a>
+    <a href="https://jp.wsj.com/" target="_blank" rel="noopener" class="link-btn news-link"><span class="link-icon">🌐</span><span class="link-text">WSJ 日本版</span></a>
+    <a href="https://www.nikkei.com/prime/veritas" target="_blank" rel="noopener" class="link-btn news-link"><span class="link-icon">💎</span><span class="link-text">日経ヴェリタス</span></a>
+    <a href="https://www.nikkei.com/nkd/" target="_blank" rel="noopener" class="link-btn news-link"><span class="link-icon">📊</span><span class="link-text">日経会社情報</span></a>
+    <span class="link-btn news-link ispeed-btn" title="リンクできないので、iSPEEDアプリ内の日経テレコンを見てください"><span class="link-icon">⚡</span><span class="link-text">iSPEED・日経テレコン</span></span>
+  </div>
+</div>
+
+<!-- ④ チェックリスト -->
+<div class="section-header" style="margin-top:16px;margin-bottom:0;"><div class="section-title">デイリーチェックリスト</div><div class="section-line"></div></div>
+<div class="checklist-header">
+  <div style="font-size:12px;color:var(--text-dim);font-family:'JetBrains Mono',monospace;" id="checkProgress"></div>
+  <div class="clear-all-btn" onclick="clearAllChecks()"><div class="clear-checkbox">✕</div><span class="clear-label">すべてクリア</span></div>
+</div>
+<div class="checklist" id="checklist"></div>
+
+<!-- ⑤ スケジュール (アコーディオン) -->
+<div class="accordion" id="scheduleAccordion">
+  <div class="accordion-header" onclick="toggleAccordion()">
+    <div class="accordion-title">市場スケジュール（JST基準）</div>
+    <span class="accordion-action" onclick="event.stopPropagation();openAlertSettings()">⚙ アラート設定</span>
+    <div class="accordion-chevron">▼</div>
+  </div>
+  <div class="accordion-body">
+    <div class="accordion-body-inner">
+      <div class="schedule-scroll">
+      <table class="schedule-table">
+        <thead><tr><th>時刻 JST</th><th>現地時間</th><th>市場</th><th>イベント</th><th>アラート</th><th>本日</th></tr></thead>
+        <tbody id="scheduleBody"></tbody>
+      </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /container -->
+
+<div class="toast" id="toast"><div class="toast-title" id="toastTitle"></div><div class="toast-body" id="toastBody"></div></div>
+
+<!-- ALERT SETTINGS MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="handleOverlayClick(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closeAlertSettings()">✕</button>
+    <div class="modal-title">⚙ アラート設定</div>
+    <div class="modal-sub">各アラートのON/OFFと時刻（JST / HH:MM）を変更できます。</div>
+    <div class="modal-sub2">🗓 土日・祝日は市場ごとに自動でアラートをスキップします。<br>祝日リストは2025〜2026年の主要祝日を収録。毎年1月に手動更新が必要です。</div>
+    <div id="holidayNoteEl" class="holiday-note" style="display:none;"></div>
+    <div id="alertSettingsList"></div>
+    <button class="modal-save-btn" onclick="saveAlertSettings()">✓ 設定を保存</button>
+    <button class="modal-reset-btn" onclick="resetAlertSettings()">↺ デフォルトに戻す</button>
+  </div>
+</div>
+
+<script>
+/* ════════════════════════════════════════════════════
+   HOLIDAY CALENDARS
+════════════════════════════════════════════════════ */
+const HOLIDAYS={
+  JP:new Set(["2025-01-01","2025-01-02","2025-01-03","2025-01-13","2025-02-11","2025-02-23","2025-02-24","2025-03-20","2025-04-29","2025-05-03","2025-05-04","2025-05-05","2025-05-06","2025-07-21","2025-08-11","2025-09-15","2025-09-23","2025-10-13","2025-11-03","2025-11-23","2025-11-24","2025-12-31","2026-01-01","2026-01-02","2026-01-12","2026-02-11","2026-02-23","2026-03-20","2026-04-29","2026-05-03","2026-05-04","2026-05-05","2026-05-06","2026-07-20","2026-08-11","2026-09-21","2026-09-22","2026-09-23","2026-10-12","2026-11-03","2026-11-23","2026-12-31"]),
+  LON:new Set(["2025-01-01","2025-04-18","2025-04-21","2025-05-05","2025-05-26","2025-08-25","2025-12-25","2025-12-26","2026-01-01","2026-04-03","2026-04-06","2026-05-04","2026-05-25","2026-08-31","2026-12-25","2026-12-28"]),
+  NY:new Set(["2025-01-01","2025-01-20","2025-02-17","2025-04-18","2025-05-26","2025-06-19","2025-07-04","2025-09-01","2025-11-27","2025-12-25","2026-01-01","2026-01-19","2026-02-16","2026-04-03","2026-05-25","2026-06-19","2026-07-03","2026-09-07","2026-11-26","2026-12-25"]),
+};
+function pad(n){return String(n).padStart(2,'0');}
+function fmtTZ(d,tz,opts){try{return new Intl.DateTimeFormat('ja-JP',{timeZone:tz,...opts}).format(d);}catch(e){return '--';}}
+function dateKeyTZ(d,tz){return fmtTZ(d,tz,{year:'numeric',month:'2-digit',day:'2-digit'}).replace(/\//g,'-');}
+function wdayTZ(d,tz){
+  const s=fmtTZ(d,tz,{weekday:'short'});
+  const map={'日':0,'月':1,'火':2,'水':3,'木':4,'金':5,'土':6};
+  return map[s[0]]??new Date(dateKeyTZ(d,tz)+'T12:00:00Z').getDay();
+}
+function isJPHoliday(d){const wd=wdayTZ(d,'Asia/Tokyo');return wd===0||wd===6||HOLIDAYS.JP.has(dateKeyTZ(d,'Asia/Tokyo'));}
+function isLONHoliday(d){const wd=wdayTZ(d,'Europe/London');return wd===0||wd===6||HOLIDAYS.LON.has(dateKeyTZ(d,'Europe/London'));}
+function isNYHoliday(d){const wd=wdayTZ(d,'America/New_York');return wd===0||wd===6||HOLIDAYS.NY.has(dateKeyTZ(d,'America/New_York'));}
+const ALERT_MARKET={jpam10:'jp',jpam_e:'jp',jppm10:'jp',jppm_e:'jp',lon10:'lon',lon_e:'lon',ny30:'ny',ny10:'ny',ny_e:'ny'};
+
+function isAlertSuppressed(id, d){
+  const mkt = ALERT_MARKET[id];
+  if(!mkt) return false;
+
+  // For each alert, build the exact Date object for when it would fire on day d (JST midnight + alert time)
+  const ev = ALL_ALERTS.find(a => a.id === id);
+  if(!ev) return false;
+
+  // Construct the actual fire-time Date in JST
+  const jstMidnight = new Date(dateKeyTZ(d,'Asia/Tokyo') + 'T00:00:00+09:00');
+  const fireTime = new Date(jstMidnight.getTime() + (ev.hour*60 + ev.min)*60000);
+
+  if(mkt === 'jp')  return isJPHoliday(fireTime);
+  if(mkt === 'lon') return isLONHoliday(fireTime);   // check London date at actual fire moment
+  if(mkt === 'ny')  return isNYHoliday(fireTime);
+  return false;
+}
+
+/* ════════════════════════════════════════════════════
+   ALERT DEFAULTS
+   baseH/baseM = 市場イベントの実際の時刻（JST）
+   label はデフォルト表示。実際の表示は dynLabel() で動的生成。
+════════════════════════════════════════════════════ */
+const ALERT_DEFAULTS=[
+  {id:'jpam10',group:'jp', baseH:9,  baseM:0,  defH:8, defM:50, event:'前場 開始',       flag:'🇯🇵', sub:'前場開始。エントリーポイントを最終確認。'},
+  {id:'jpam_e',group:'jp', baseH:11, baseM:30, defH:11,defM:20, event:'前場 終了',       flag:'🇯🇵', sub:'前場クローズ。ポジション確認。'},
+  {id:'jppm10',group:'jp', baseH:12, baseM:30, defH:12,defM:20, event:'後場 開始',       flag:'🇯🇵', sub:'後場開始。昼休みのニュースをチェック。'},
+  {id:'jppm_e',group:'jp', baseH:15, baseM:30, defH:15,defM:20, event:'後場 終了',       flag:'🇯🇵', sub:'後場クローズ。本日の取引を整理しましょう。'},
+  {id:'lon10', group:'lon',baseH:17, baseM:0,  defH:16,defM:50, event:'ロンドン市場 開始',flag:'🇬🇧', sub:'17:00 JST（冬時間）/ 18:00 JST（夏時間）ロンドンオープン。'},
+  {id:'lon_e', group:'lon',baseH:1,  baseM:30, defH:1, defM:20, event:'ロンドン市場 終了',flag:'🇬🇧', sub:'1:30 JST（冬時間）ロンドンクローズ。'},
+  {id:'ny30',  group:'ny', baseH:22, baseM:30, defH:22,defM:0,  event:'NY市場 開始',    flag:'🇺🇸', sub:'NYオープン。米経済指標と先物を確認。'},
+  {id:'ny10',  group:'ny', baseH:22, baseM:30, defH:22,defM:20, event:'NY市場 開始',    flag:'🇺🇸', sub:'NYマーケットオープン直前。最新ニュースをチェック。'},
+  {id:'ny_e',  group:'ny', baseH:5,  baseM:0,  defH:4, defM:50, event:'NY市場 終了',    flag:'🇺🇸', sub:'JST NYクローズ。本日の米国市場を振り返りましょう。'},
+];
+
+// 設定時刻とイベント時刻の差分から「○分前 / ○分後」ラベルを動的生成
+function dynLabel(a){
+  const base = a.baseH*60 + a.baseM;
+  let diff = base - (a.hour*60 + a.min);
+  // 日をまたぐケース（例: lon_e の翌1:30 vs 深夜設定）
+  if(diff > 720)  diff -= 1440;
+  if(diff < -720) diff += 1440;
+  const absDiff = Math.abs(diff);
+  const h = Math.floor(absDiff/60), m = absDiff%60;
+  const timeStr = h>0 ? `${h}時間${m>0?m+'分':''}` : `${m}分`;
+  const rel = diff > 0 ? `${timeStr}前` : diff < 0 ? `${timeStr}後` : 'ちょうど';
+  return `${a.flag} ${a.event} ${rel}`;
+}
+
+// アラート発火時のメッセージも動的生成
+function dynMsg(a){
+  const base = a.baseH*60 + a.baseM;
+  let diff = base - (a.hour*60 + a.min);
+  if(diff > 720) diff -= 1440; if(diff < -720) diff += 1440;
+  const absDiff = Math.abs(diff);
+  const h = Math.floor(absDiff/60), m = absDiff%60;
+  const timeStr = h>0 ? `${h}時間${m>0?m+'分':''}` : `${m}分`;
+  const rel = diff > 0 ? `あと${timeStr}` : diff < 0 ? `${timeStr}経過` : 'ちょうど今';
+  return `${a.event} ${rel}！`;
+}
+function loadAlertSettings(){
+  try{const s=JSON.parse(localStorage.getItem('td_alerts')||'{}');return ALERT_DEFAULTS.map(a=>({...a,hour:s[a.id]?.hour??a.defH,min:s[a.id]?.min??a.defM,enabled:s[a.id]?.enabled??true}));}
+  catch(e){return ALERT_DEFAULTS.map(a=>({...a,hour:a.defH,min:a.defM,enabled:true}));}
+}
+let ALL_ALERTS=loadAlertSettings();
+let firedAlerts=new Set(),alertTimer=null;
+
+/* ── Modal ── */
+function openAlertSettings(){
+  const d=new Date(),hn=document.getElementById('holidayNoteEl'),notes=[];
+  if(isJPHoliday(d))notes.push('🇯🇵 本日は東京市場休場日です（日本のアラートはスキップ）');
+  if(isLONHoliday(d))notes.push('🇬🇧 本日はロンドン市場休場日です（ロンドンのアラートはスキップ）');
+  if(isNYHoliday(d))notes.push('🇺🇸 本日はNY市場休場日です（NYのアラートはスキップ）');
+  if(notes.length){hn.innerHTML=notes.join('<br>');hn.style.display='block';}else{hn.style.display='none';}
+  renderAlertSettingsList();document.getElementById('modalOverlay').classList.add('show');
+}
+function closeAlertSettings(){document.getElementById('modalOverlay').classList.remove('show');}
+function handleOverlayClick(e){if(e.target===document.getElementById('modalOverlay'))closeAlertSettings();}
+function renderAlertSettingsList(){
+  const groups={jp:'🇯🇵 日本市場',lon:'🇬🇧 ロンドン市場',ny:'🇺🇸 NY市場'};
+  let lastG='',html='';
+  ALL_ALERTS.forEach(a=>{
+    if(a.group!==lastG){html+=`<div class="modal-section-label">${groups[a.group]}</div>`;lastG=a.group;}
+    html+=`<div class="alert-setting-row ${a.enabled?'':'disabled'}" data-id="${a.id}">
+      <label class="alert-toggle"><input type="checkbox" ${a.enabled?'checked':''} onchange="toggleRow(this)"><span class="toggle-slider"></span></label>
+      <div class="alert-setting-info">
+        <div class="alert-setting-label" id="lbl_${a.id}">${dynLabel(a)}</div>
+        <div class="alert-setting-default">デフォルト: ${pad(a.defH)}:${pad(a.defM)} &nbsp;|&nbsp; イベント: ${pad(a.baseH)}:${pad(a.baseM)}</div>
+      </div>
+      <input class="alert-time-input" type="time" value="${pad(a.hour)}:${pad(a.min)}" oninput="updateRowLabel(this,'${a.id}')">
+    </div>`;
+  });
+  document.getElementById('alertSettingsList').innerHTML=html;
+}
+
+// 時刻入力を変えたらリアルタイムでラベルを更新
+function updateRowLabel(inp, id){
+  const[hh,mm]=(inp.value||'00:00').split(':').map(Number);
+  if(isNaN(hh)||isNaN(mm)) return;
+  const base = ALL_ALERTS.find(a=>a.id===id);
+  if(!base) return;
+  const tmp = {...base, hour:hh, min:mm};
+  const lbl = document.getElementById('lbl_'+id);
+  if(lbl) lbl.textContent = dynLabel(tmp);
+}
+function toggleRow(cb){cb.closest('.alert-setting-row').classList.toggle('disabled',!cb.checked);}
+function saveAlertSettings(){
+  const saved={};
+  document.querySelectorAll('.alert-setting-row').forEach(row=>{
+    const id=row.dataset.id,chk=row.querySelector('input[type=checkbox]'),inp=row.querySelector('.alert-time-input');
+    const[hh,mm]=(inp.value||'00:00').split(':').map(Number);
+    saved[id]={hour:isNaN(hh)?0:hh,min:isNaN(mm)?0:mm,enabled:chk.checked};
+  });
+  localStorage.setItem('td_alerts',JSON.stringify(saved));
+  ALL_ALERTS=loadAlertSettings();firedAlerts.clear();buildSchedule();closeAlertSettings();
+  showToast('✓ 設定保存','アラート設定を保存しました');
+}
+function resetAlertSettings(){
+  localStorage.removeItem('td_alerts');
+  ALL_ALERTS=loadAlertSettings();
+  firedAlerts.clear();
+  buildSchedule();
+  renderAlertSettingsList();
+  showToast('↺ リセット','アラート設定をデフォルトに戻しました');
+}
+
+/* ── Accordion ── */
+function toggleAccordion(){document.getElementById('scheduleAccordion').classList.toggle('open');}
+
+/* ── Audio ── */
+let audioCtx=null,audioUnlocked=false;
+function unlockAudio(){if(audioUnlocked)return;audioCtx=new(window.AudioContext||window.webkitAudioContext)();const b=audioCtx.createBuffer(1,1,22050),s=audioCtx.createBufferSource();s.buffer=b;s.connect(audioCtx.destination);s.start(0);audioUnlocked=true;}
+document.addEventListener('click',unlockAudio,{once:true});
+function playAlertSound(){
+  if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+  const ctx=audioCtx,now=ctx.currentTime;
+  [[880,0,0.18],[1100,0.22,0.18],[880,0.44,0.22]].forEach(([f,s,d])=>{const o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.type='sine';o.frequency.setValueAtTime(f,now+s);g.gain.setValueAtTime(0,now+s);g.gain.linearRampToValueAtTime(0.35,now+s+0.02);g.gain.exponentialRampToValueAtTime(0.001,now+s+d);o.start(now+s);o.stop(now+s+d+0.05);});
+}
+
+/* ── Clock ── */
+function updateClock(){
+  const d=new Date(),wd=['日','月','火','水','木','金','土'];
+  document.getElementById('liveClock').textContent=`${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  document.getElementById('headerDate').textContent=`${d.getFullYear()}年 ${d.getMonth()+1}月${d.getDate()}日（${wd[d.getDay()]}）`;
+  document.title=`【${d.getFullYear()}/${pad(d.getMonth()+1)}/${pad(d.getDate())} ルーティン】`;
+  [{tz:'Asia/Tokyo',tId:'wc-jp',dId:'wc-jp-date'},{tz:'Europe/London',tId:'wc-lon',dId:'wc-lon-date'},{tz:'America/New_York',tId:'wc-ny',dId:'wc-ny-date'}]
+  .forEach(({tz,tId,dId})=>{
+    document.getElementById(tId).textContent=fmtTZ(d,tz,{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
+    document.getElementById(dId).textContent=fmtTZ(d,tz,{month:'numeric',day:'numeric',weekday:'short'});
+  });
+  const hJP=isJPHoliday(d),hLon=isLONHoliday(d),hNY=isNYHoliday(d);
+  const hEl=(id,show)=>{const e=document.getElementById(id);e.textContent='🔴 本日休場';e.classList.toggle('show',show);};
+  hEl('holiday-jp',hJP);hEl('holiday-lon',hLon);hEl('holiday-ny',hNY);
+  // London local hours
+  const lonT=fmtTZ(d,'Europe/London',{hour:'2-digit',minute:'2-digit',hour12:false}).split(':').map(Number);
+  const lonMin=lonT[0]*60+lonT[1];
+  const lonOpen=!hLon&&lonMin>=480&&lonMin<990;const lonPre=!hLon&&lonMin>=450&&lonMin<480;
+  document.getElementById('wc-lon').className='wclock-time'+(lonOpen?' open':lonPre?' pre':'');
+  // NY local hours
+  const nyT=fmtTZ(d,'America/New_York',{hour:'2-digit',minute:'2-digit',hour12:false}).split(':').map(Number);
+  const nyMin=nyT[0]*60+nyT[1];
+  const nyOpen=!hNY&&nyMin>=570&&nyMin<960;const nyPre=!hNY&&nyMin>=540&&nyMin<570;
+  document.getElementById('wc-ny').className='wclock-time'+(nyOpen?' open':nyPre?' pre':'');
+  checkAlerts(d);updateMarketStatus(d);updateNextAlert(d);
+}
+
+/* ── Market Pils ── */
+function updateMarketStatus(d){
+  const hm=d.getHours()*60+d.getMinutes();
+  const hJP=isJPHoliday(d),hLon=isLONHoliday(d),hNY=isNYHoliday(d);
+  const lonT=fmtTZ(d,'Europe/London',{hour:'2-digit',minute:'2-digit',hour12:false}).split(':').map(Number);
+  const lonMin=lonT[0]*60+lonT[1];
+  const nyT=fmtTZ(d,'America/New_York',{hour:'2-digit',minute:'2-digit',hour12:false}).split(':').map(Number);
+  const nyMin=nyT[0]*60+nyT[1];
+  const segs=[
+    {label:'🇯🇵 前場',open:!hJP&&hm>=540&&hm<690,  pre:!hJP&&hm>=510&&hm<540,  holiday:hJP},
+    {label:'🇯🇵 後場',open:!hJP&&hm>=750&&hm<930,  pre:!hJP&&hm>=720&&hm<750,  holiday:hJP},
+    {label:'🇬🇧 LDN', open:!hLon&&lonMin>=480&&lonMin<990,pre:!hLon&&lonMin>=450&&lonMin<480,holiday:hLon},
+    {label:'🇺🇸 NY',  open:!hNY&&nyMin>=570&&nyMin<960, pre:!hNY&&nyMin>=540&&nyMin<570,  holiday:hNY},
+  ];
+  document.getElementById('marketPills').innerHTML=segs.map(s=>{
+    if(s.holiday)return `<div class="mpill holiday"><div class="dot dot-holiday"></div>${s.label} 休場</div>`;
+    const st=s.open?'open':s.pre?'pre':'closed',tx=s.open?'開場中':s.pre?'開場前':'閉場';
+    return `<div class="mpill ${st}"><div class="dot dot-${st}"></div>${s.label} ${tx}</div>`;
+  }).join('');
+}
+
+/* ── Alerts ── */
+function checkAlerts(d){
+  const hm=d.getHours()*60+d.getMinutes();
+  if(d.getSeconds()>10)return;
+  ALL_ALERTS.forEach(ev=>{
+    if(!ev.enabled||isAlertSuppressed(ev.id,d))return;
+    const t=ev.hour*60+ev.min,key=`${d.toDateString()}_${ev.id}`;
+    if(hm===t&&!firedAlerts.has(key)){
+      firedAlerts.add(key);
+      const msg=dynMsg(ev), sub=`${pad(ev.baseH)}:${pad(ev.baseM)} ${ev.event}。${ev.sub}`;
+      showAlertBanner(msg,sub);showToast('⏰ '+dynLabel(ev),msg);playAlertSound();
+      if(Notification.permission==='granted')new Notification('TradeDesk',{body:msg+'\n'+sub});
+    }
+  });
+}
+function showAlertBanner(msg,sub){
+  document.getElementById('alertText').textContent=msg;document.getElementById('alertSub').textContent=sub||'';
+  const b=document.getElementById('alertBanner');b.classList.add('show');
+  if(alertTimer)clearTimeout(alertTimer);alertTimer=setTimeout(()=>b.classList.remove('show'),30000);
+}
+function closeAlert(){document.getElementById('alertBanner').classList.remove('show');if(alertTimer)clearTimeout(alertTimer);}
+function showToast(title,body){
+  document.getElementById('toastTitle').textContent=title;document.getElementById('toastBody').textContent=body;
+  const t=document.getElementById('toast');t.classList.add('show');setTimeout(()=>t.classList.remove('show'),8000);
+}
+function updateNextAlert(d){
+  // Strategy:
+  // 1. Scan up to 7 days ahead one day at a time.
+  // 2. For each day, collect ALL valid (enabled + non-holiday) alerts that are still in the future.
+  // 3. On the FIRST day that has at least one valid alert, pick the EARLIEST one among them.
+  //    This ensures we never stop at a late-night alert (e.g. 01:20) and miss an earlier one
+  //    (e.g. 08:50) on the same calendar day.
+  const nowMin = d.getHours()*60 + d.getMinutes();
+  let next = null, minDiff = Infinity;
+
+  for(let dayOffset = 0; dayOffset < 7; dayOffset++){
+    const future = new Date(d.getTime() + dayOffset * 86400000);
+    let dayHasAlert = false;
+
+    ALL_ALERTS.filter(a => a.enabled).forEach(ev => {
+      if(isAlertSuppressed(ev.id, future)) return;
+      const alertMin = ev.hour*60 + ev.min;
+      const totalDiff = dayOffset * 1440 + alertMin - nowMin;
+      if(totalDiff <= 0) return; // already passed
+      dayHasAlert = true;
+      if(totalDiff < minDiff){ minDiff = totalDiff; next = ev; }
+    });
+
+    // Only break after processing ALL alerts for this day
+    if(dayHasAlert) break;
+  }
+
+  if(next){
+    const totalH = Math.floor(minDiff/60), m = minDiff%60;
+    const days = Math.floor(totalH/24), h = totalH%24;
+    // Build human-readable fire time in JST
+    const fireDate = new Date(d.getTime() + minDiff * 60000);
+    const wd = ['日','月','火','水','木','金','土'];
+    const fireDateStr = `${fireDate.getMonth()+1}/${fireDate.getDate()}(${wd[fireDate.getDay()]}) ${pad(next.hour)}:${pad(next.min)}`;
+    const remainStr = (days>0?days+'日':'') + (h>0?h+'時間':'') + (m>0?m+'分':'');
+    document.getElementById('nextAlertInfo').textContent =
+      `${dynLabel(next)} ${fireDateStr} — あと${remainStr}`;
+  } else {
+    document.getElementById('nextAlertInfo').textContent = '今後7日間に有効なアラートなし';
+  }
+}
+
+/* ── Schedule ── */
+function buildSchedule(){
+  // Each row: g=market group, t=JST time string, n=event name, note=alert id, local=local time label
+  const rows=[
+    {g:'jp', t:'09:00',   n:'前場 開始',               note:'jpam10', local:'09:00 JST'},
+    {g:'jp', t:'11:30',   n:'前場 終了',               note:'jpam_e', local:'11:30 JST'},
+    {g:'jp', t:'12:30',   n:'後場 開始',               note:'jppm10', local:'12:30 JST'},
+    {g:'jp', t:'15:30',   n:'後場 終了',               note:'jppm_e', local:'15:30 JST'},
+    {g:'lon',t:'17:00',   n:'ロンドン 開始（冬時間）', note:'lon10',  local:'08:00 GMT / 09:00 BST'},
+    {g:'lon',t:'翌01:30', n:'ロンドン 終了（冬時間）', note:'lon_e',  local:'16:30 GMT / 17:30 BST'},
+    {g:'ny', t:'22:00',   n:'NY市場 準備開始',         note:'ny30',   local:'09:00 ET'},
+    {g:'ny', t:'22:30',   n:'NY市場 開始',             note:'ny10',   local:'09:30 ET'},
+    {g:'ny', t:'翌05:00', n:'NY市場 終了',             note:'ny_e',   local:'16:00 ET'},
+  ];
+  const d=new Date(),hm=d.getHours()*60+d.getMinutes();
+  const hJP=isJPHoliday(d),hLon=isLONHoliday(d),hNY=isNYHoliday(d);
+  const mktH={jp:hJP,lon:hLon,ny:hNY};
+  const mk={jp:'🇯🇵 日本',lon:'🇬🇧 ロンドン',ny:'🇺🇸 NY'};
+  document.getElementById('scheduleBody').innerHTML=rows.map(row=>{
+    const raw=row.t.replace('翌','');
+    const[hh,mm]=raw.split(':').map(Number);
+    const diff=hh*60+mm-hm,isH=mktH[row.g];
+    const cls=(!isH&&diff>0&&diff<=30)?'upcoming':(isH?'holiday-row':'');
+    const a=ALL_ALERTS.find(x=>x.id===row.note);
+    const st=a?(a.enabled?`<span style="color:var(--green)">✓ ON</span> <span style="color:var(--text-dim)">${pad(a.hour)}:${pad(a.min)}</span><br><span style="color:var(--text-dim);font-size:9px;">${dynLabel(a)}</span>`:`<span style="color:var(--text-dim)">— OFF</span>`):'—';
+    const ds=isH?`<span style="color:var(--red);font-size:10px;">🔴 休場</span>`:`<span style="color:var(--text-dim);font-size:10px;">—</span>`;
+    return `<tr class="${cls}">
+      <td class="sch-time">${row.t}</td>
+      <td style="font-size:10px;color:var(--text-muted);white-space:nowrap;">${row.local}</td>
+      <td class="sch-market">${mk[row.g]}</td>
+      <td>${row.n}</td>
+      <td style="font-size:11px;">${st}</td>
+      <td>${ds}</td>
+    </tr>`;
+  }).join('');
+}
+
+/* ── Checklist ── */
+const checkItems=['前日の振り返り・損益確認','経済カレンダーの確認（重要指標・決算）','保有銘柄のニュースチェック','日経平均・為替のトレンド確認','TradingViewでテクニカル分析','各スクリーニング機能でスクリーニング','エントリー・エグジット計画の立案','リスク管理・損切りラインの設定確認','取引後の記録・日誌更新'];
+const today=new Date().toDateString();
+if(localStorage.getItem('td_day')!==today){localStorage.setItem('td_day',today);localStorage.setItem('td_chk','{}');}
+let chkState=JSON.parse(localStorage.getItem('td_chk')||'{}');
+function buildChecklist(){
+  const dc=checkItems.filter((_,i)=>chkState[i]).length;
+  document.getElementById('checkProgress').textContent=`${dc} / ${checkItems.length} 完了`;
+  document.getElementById('checklist').innerHTML=checkItems.map((item,i)=>{
+    const done=chkState[i]||false;
+    return `<div class="check-item ${done?'done':''}" onclick="toggleChk(${i})"><div class="checkbox">${done?'✓':''}</div><span class="check-label">${item}</span></div>`;
+  }).join('');
+}
+function toggleChk(i){chkState[i]=!chkState[i];localStorage.setItem('td_chk',JSON.stringify(chkState));buildChecklist();}
+function clearAllChecks(){chkState={};localStorage.setItem('td_chk','{}');buildChecklist();}
+
+/* ── Init ── */
+(function init(){
+  updateClock();setInterval(updateClock,1000);
+  buildSchedule();setInterval(buildSchedule,30000);
+  buildChecklist();
+  if('Notification' in window&&Notification.permission==='default')Notification.requestPermission();
+})();
+</script>
+</body>
+</html>
