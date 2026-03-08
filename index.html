@@ -5,7 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="color-scheme" content="dark">
 <meta name="theme-color" content="#0a0e14">
-<title id="pageTitle">株式投資 デイリールーティン</title>
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="TradeDesk">
+<!-- ホーム画面アイコン（icon.png を同じフォルダに置くこと） -->
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="icon" type="image/png" href="icon.png">
+<title>ROUTINE</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&family=Bebas+Neue&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -390,7 +397,7 @@ function wdayTZ(d,tz){
 function isJPHoliday(d){const wd=wdayTZ(d,'Asia/Tokyo');return wd===0||wd===6||HOLIDAYS.JP.has(dateKeyTZ(d,'Asia/Tokyo'));}
 function isLONHoliday(d){const wd=wdayTZ(d,'Europe/London');return wd===0||wd===6||HOLIDAYS.LON.has(dateKeyTZ(d,'Europe/London'));}
 function isNYHoliday(d){const wd=wdayTZ(d,'America/New_York');return wd===0||wd===6||HOLIDAYS.NY.has(dateKeyTZ(d,'America/New_York'));}
-const ALERT_MARKET={jpam10:'jp',jpam_e:'jp',jppm10:'jp',jppm_e:'jp',lon10:'lon',lon_e:'lon',ny30:'ny',ny10:'ny',ny_e:'ny'};
+const ALERT_MARKET={jpam10:'jp',jpam_e:'jp',jppm10:'jp',jppm_e:'jp',lon10:'lon',lon_e:'lon',ny10:'ny',ny_e:'ny'};
 
 function isAlertSuppressed(id, d){
   const mkt = ALERT_MARKET[id];
@@ -422,7 +429,6 @@ const ALERT_DEFAULTS=[
   {id:'jppm_e',group:'jp', baseH:15, baseM:30, defH:15,defM:20, event:'後場 終了',       flag:'🇯🇵', sub:'後場クローズ。本日の取引を整理しましょう。'},
   {id:'lon10', group:'lon',baseH:17, baseM:0,  defH:16,defM:50, event:'ロンドン市場 開始',flag:'🇬🇧', sub:'17:00 JST（冬時間）/ 18:00 JST（夏時間）ロンドンオープン。'},
   {id:'lon_e', group:'lon',baseH:1,  baseM:30, defH:1, defM:20, event:'ロンドン市場 終了',flag:'🇬🇧', sub:'1:30 JST（冬時間）ロンドンクローズ。'},
-  {id:'ny30',  group:'ny', baseH:22, baseM:30, defH:22,defM:0,  event:'NY市場 開始',    flag:'🇺🇸', sub:'NYオープン。米経済指標と先物を確認。'},
   {id:'ny10',  group:'ny', baseH:22, baseM:30, defH:22,defM:20, event:'NY市場 開始',    flag:'🇺🇸', sub:'NYマーケットオープン直前。最新ニュースをチェック。'},
   {id:'ny_e',  group:'ny', baseH:5,  baseM:0,  defH:4, defM:50, event:'NY市場 終了',    flag:'🇺🇸', sub:'JST NYクローズ。本日の米国市場を振り返りましょう。'},
 ];
@@ -536,7 +542,6 @@ function updateClock(){
   const d=new Date(),wd=['日','月','火','水','木','金','土'];
   document.getElementById('liveClock').textContent=`${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
   document.getElementById('headerDate').textContent=`${d.getFullYear()}年 ${d.getMonth()+1}月${d.getDate()}日（${wd[d.getDay()]}）`;
-  document.title=`【${d.getFullYear()}/${pad(d.getMonth()+1)}/${pad(d.getDate())} ルーティン】`;
   [{tz:'Asia/Tokyo',tId:'wc-jp',dId:'wc-jp-date'},{tz:'Europe/London',tId:'wc-lon',dId:'wc-lon-date'},{tz:'America/New_York',tId:'wc-ny',dId:'wc-ny-date'}]
   .forEach(({tz,tId,dId})=>{
     document.getElementById(tId).textContent=fmtTZ(d,tz,{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
